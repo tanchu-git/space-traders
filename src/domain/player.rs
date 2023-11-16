@@ -40,12 +40,12 @@ impl<'a> NewPlayer<'a> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct Player {
     data: Data,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Data {
     account_id: String,
@@ -71,9 +71,8 @@ impl Player {
 #[cfg(test)]
 mod tests {
     use dotenv::dotenv;
-    use reqwest::Client;
 
-    use crate::domain::player::Player;
+    use crate::{domain::player::Player, helper::api::call_api_get_generic};
 
     fn get_token() -> String {
         dotenv().ok();
@@ -89,17 +88,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_player_info_in_json() {
-        let status = Client::new()
-            .get("https://api.spacetraders.io/v2/my/agent")
-            .header("Authorization", &get_token())
-            .send()
-            .await
-            .unwrap()
-            .text()
+    async fn test_call_api_get_generic() {
+        let player = call_api_get_generic(Player::default(), "/my/agent", &get_token())
             .await
             .unwrap();
 
-        dbg!(status);
+        dbg!(player);
     }
 }

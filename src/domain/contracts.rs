@@ -82,7 +82,6 @@ impl Contracts {
 #[cfg(test)]
 mod tests {
     use dotenv::dotenv;
-    use reqwest::Client;
 
     use crate::domain::contracts::Contracts;
 
@@ -100,25 +99,11 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn test_accept_contract() {
         let contracts = Contracts::get_contracts(&get_token()).await.unwrap();
         let accepted_contract = contracts.accept_contract(0, &get_token()).await.unwrap();
 
         dbg!(accepted_contract);
-    }
-
-    #[tokio::test]
-    async fn test_get_player_contracts_in_json() {
-        let contracts = Client::new()
-            .get("https://api.spacetraders.io/v2/my/contracts")
-            .header("Authorization", &get_token())
-            .send()
-            .await
-            .unwrap()
-            .text()
-            .await
-            .unwrap();
-
-        dbg!(contracts);
     }
 }

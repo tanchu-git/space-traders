@@ -1,7 +1,13 @@
-use reqwest::{header::HeaderValue, Client};
+use std::fmt::Debug;
 
-pub async fn call_api_get(api: &str, token: &str) -> Result<reqwest::Response, reqwest::Error> {
-    let base_api = format!("https://api.spacetraders.io/v2{api}");
+use reqwest::{header::HeaderValue, Client};
+use serde::de::DeserializeOwned;
+
+pub async fn call_api_get(
+    api_endpoint: &str,
+    token: &str,
+) -> Result<reqwest::Response, reqwest::Error> {
+    let base_api = format!("https://api.spacetraders.io/v2{api_endpoint}");
 
     Client::new()
         .get(base_api)
@@ -10,8 +16,11 @@ pub async fn call_api_get(api: &str, token: &str) -> Result<reqwest::Response, r
         .await
 }
 
-pub async fn call_api_post(api: &str, token: &str) -> Result<reqwest::Response, reqwest::Error> {
-    let base_api = format!("https://api.spacetraders.io/v2{api}");
+pub async fn call_api_post(
+    api_endpoint: &str,
+    token: &str,
+) -> Result<reqwest::Response, reqwest::Error> {
+    let base_api = format!("https://api.spacetraders.io/v2{api_endpoint}");
 
     Client::new()
         .post(base_api)
@@ -19,4 +28,26 @@ pub async fn call_api_post(api: &str, token: &str) -> Result<reqwest::Response, 
         .header("Content-Length", HeaderValue::from_static("0"))
         .send()
         .await
+}
+
+#[allow(unused_assignments)]
+pub async fn call_api_get_generic<'a, T>(
+    mut some_struct: T,
+    api_endpoint: &'a str,
+    token: &'a str,
+) -> Result<T, reqwest::Error>
+where
+    T: DeserializeOwned + Debug,
+{
+    let base_api = format!("https://api.spacetraders.io/v2{api_endpoint}");
+
+    some_struct = Client::new()
+        .get(base_api)
+        .header("Authorization", token)
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    Ok(some_struct)
 }

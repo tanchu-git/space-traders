@@ -90,7 +90,6 @@ impl Systems {
 #[cfg(test)]
 mod tests {
     use dotenv::dotenv;
-    use reqwest::Client;
 
     use crate::domain::{player::Player, systems::Systems};
 
@@ -120,29 +119,5 @@ mod tests {
         let shipyards = Systems::find_shipyards(player, &token).await.unwrap();
 
         dbg!(shipyards);
-    }
-
-    #[tokio::test]
-    async fn test_get_headquarters_in_json() {
-        let token = get_token();
-        let player = Player::player_info(&token).await.unwrap();
-        let waypoint = player.get_hq_waypoint();
-        let (system_loc, _) = waypoint
-            .rsplit_once('-')
-            .expect("player arg should have been checked for validity before being passed in.");
-
-        let api =
-            format!("https://api.spacetraders.io/v2/systems/{system_loc}/waypoints/{waypoint}");
-        let hq = Client::new()
-            .get(api)
-            .header("Authorization", &get_token())
-            .send()
-            .await
-            .unwrap()
-            .text()
-            .await
-            .unwrap();
-
-        dbg!(hq);
     }
 }

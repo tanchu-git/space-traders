@@ -8,17 +8,21 @@ use dotenv::dotenv;
 async fn main() -> Result<(), reqwest::Error> {
     dotenv().ok();
 
+    let mut player: Player = Player::default();
+
     let token = std::env::var("ACCESS_TOKEN").expect("Access token should be set.");
 
-    let player = Player::player_info(&token).await?;
+    player.player_info(&token).await?;
 
-    let contract = Contracts::get_contracts(&token).await?;
-
-    contract.accept_contract(0, &token).await?;
+    let mut contracts: Contracts = Contracts::default();
+    contracts.get_contracts(&token).await?;
+    // let accepted = contracts.accept_contract(0, &token).await?;
 
     dbg!(player);
     println!();
-    dbg!(contract);
+    dbg!(contracts);
+    println!();
+    // dbg!(accepted);
 
     Ok(())
 }

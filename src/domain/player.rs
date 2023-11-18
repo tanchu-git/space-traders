@@ -1,7 +1,7 @@
-use reqwest::Client;
+use reqwest::{Client, Method};
 use serde::{Deserialize, Serialize};
 
-use crate::helper::api;
+use crate::helper::api::call_api;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 struct NewPlayer<'a> {
@@ -43,6 +43,8 @@ impl<'a> NewPlayer<'a> {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct Player {
     data: Data,
+    #[serde(default)]
+    current_waypoint: CurrentWaypoint,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
@@ -56,15 +58,34 @@ pub struct Data {
     ship_count: u16,
 }
 
-impl Player {
-    pub async fn player_info(token: &str) -> Result<Player, reqwest::Error> {
-        let player: Player = api::call_api_get("/my/agent", token).await?.json().await?;
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+pub struct CurrentWaypoint {
+    sector: String,
+    system: String,
+    location: String,
+}
 
-        Ok(player)
+impl Player {
+    pub async fn player_info(&mut self, token: &str) -> Result<(), reqwest::Error> {
+        call_api(self, Method::GET, "/my/agent", token).await?;
+
+        Ok(())
     }
 
     pub fn get_hq_waypoint(&self) -> &str {
         &self.data.headquarters
+    }
+
+    pub fn get_current_waypoint(&mut self) -> &str {
+        self.current_waypoint.sector.push('-');
+        self.current_waypoint
+            .sector
+            .push_str(&self.current_waypoint.system);
+        self.current_waypoint.sector.push('-');
+        self.current_waypoint
+            .sector
+            .push_str(&self.current_waypoint.location);
+        &self.current_waypoint.sector
     }
 }
 
@@ -72,7 +93,7 @@ impl Player {
 mod tests {
     use dotenv::dotenv;
 
-    use crate::{domain::player::Player, helper::api::call_api_get_generic};
+    use crate::domain::player::Player;
 
     fn get_token() -> String {
         dotenv().ok();
@@ -82,17 +103,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_player_info() {
-        let player_status = Player::player_info(&get_token()).await.unwrap();
+        let mut player: Player = Player::default();
+        player.player_info(&get_token()).await.unwrap();
 
-        dbg!(player_status);
-    }
+        dbg!(&player);
 
-    #[tokio::test]
-    async fn test_call_api_get_generic() {
-        let player = call_api_get_generic(Player::default(), "/my/agent", &get_token())
-            .await
-            .unwrap();
-
-        dbg!(player);
+        assert_ne!(player, Player::default());
     }
 }

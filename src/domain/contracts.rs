@@ -1,19 +1,20 @@
+use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 use crate::helper::{
-    api::{call_api_get, call_api_post},
+    api::{call_api, call_api_post},
     structs::Meta,
 };
 
 use super::player;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct Contracts {
     data: Vec<Contract>,
     meta: Meta,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 #[serde(rename_all = "camelCase")]
 struct Contract {
     id: String,
@@ -26,21 +27,21 @@ struct Contract {
     deadline_to_accept: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 struct Terms {
     deadline: String,
     payment: Payment,
     deliver: Vec<ContractFulfilment>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 #[serde(rename_all = "camelCase")]
 struct Payment {
     on_accepted: u32,
     on_fulfilled: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 #[serde(rename_all = "camelCase")]
 struct ContractFulfilment {
     trade_symbol: String,
@@ -49,22 +50,22 @@ struct ContractFulfilment {
     units_fulfilled: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct AcceptedContract {
     data: ContractDetails,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct ContractDetails {
     contract: Contract,
     agent: player::Data,
 }
 
 impl Contracts {
-    pub async fn get_contracts(token: &str) -> Result<Contracts, reqwest::Error> {
-        let contracts: Contracts = call_api_get("/my/contracts", token).await?.json().await?;
+    pub async fn get_contracts(&mut self, token: &str) -> Result<(), reqwest::Error> {
+        call_api(self, Method::GET, "/my/contracts", token).await?;
 
-        Ok(contracts)
+        Ok(())
     }
 
     pub async fn accept_contract(
@@ -93,15 +94,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_player_contracts() {
-        let contracts = Contracts::get_contracts(&get_token()).await.unwrap();
+        let mut contracts: Contracts = Contracts::default();
+        contracts.get_contracts(&get_token()).await.unwrap();
 
-        dbg!(contracts);
+        dbg!(&contracts);
+        assert_ne!(contracts, Contracts::default());
     }
 
     #[tokio::test]
     #[ignore]
     async fn test_accept_contract() {
-        let contracts = Contracts::get_contracts(&get_token()).await.unwrap();
+        let mut contracts: Contracts = Contracts::default();
+        contracts.get_contracts(&get_token()).await.unwrap();
         let accepted_contract = contracts.accept_contract(0, &get_token()).await.unwrap();
 
         dbg!(accepted_contract);

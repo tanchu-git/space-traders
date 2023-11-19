@@ -30,7 +30,7 @@ pub struct Frame {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-// #[serde(default)]
+#[serde(default)]
 pub struct Requirements {
     power: u16,
     crew: i16,
@@ -57,7 +57,7 @@ pub struct Engine {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-// #[serde(default)]
+#[serde(default)]
 pub struct Module {
     symbol: String,
     name: String,
@@ -67,30 +67,12 @@ pub struct Module {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+#[serde(default)]
 pub struct Mount {
     symbol: String,
     name: String,
     description: String,
     strength: u16,
+    deposits: Vec<String>,
     requirements: Requirements,
-}
-
-impl Ships {
-    pub async fn get_ships_for_purchase(&mut self) {}
-}
-
-#[cfg(test)]
-mod tests {
-    use dotenv::dotenv;
-
-    use crate::domain::player::Player;
-
-    fn get_token() -> String {
-        dotenv().ok();
-
-        std::env::var("ACCESS_TOKEN").unwrap()
-    }
-
-    #[tokio::test]
-    async fn test_get_ships() {}
 }

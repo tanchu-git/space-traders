@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug)]
 pub struct PlayerName(String);
 
@@ -37,12 +39,24 @@ impl Waypoint {
 
         let is_alpha_num = waypoint.chars().all(char::is_alphanumeric);
 
+        let mut dash_count = HashMap::new();
+
+        for char in waypoint.chars() {
+            if char == '-' {
+                *dash_count.entry(char).or_insert(0) += 1;
+            }
+        }
+
         let forbidden_chars = ['/', '(', ')', '"', '<', '>', '\\', '{', '}', '[', ']', ' '];
         let contains_forbidden_chars = waypoint
             .chars()
             .any(|waypoint_char| forbidden_chars.contains(&waypoint_char));
 
-        if is_empty_or_whitespace || contains_forbidden_chars || is_alpha_num {
+        if is_empty_or_whitespace
+            || contains_forbidden_chars
+            || is_alpha_num
+            || dash_count.remove(&'-') != Some(2)
+        {
             Err(format!(
                 "{waypoint}, is not a valid waypoint. Consult API provider."
             ))
@@ -71,7 +85,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_not_valid_waypoint() {
-        let is_valid = Waypoint::parse("X1-BG42- 1").is_ok();
+        let is_valid = Waypoint::parse("X1-BG42-1-").is_ok();
 
         assert!(!is_valid);
     }

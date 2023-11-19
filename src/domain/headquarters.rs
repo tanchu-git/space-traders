@@ -67,6 +67,10 @@ impl Headquarters {
 
         Ok(())
     }
+
+    pub fn get_hq_system(&self) -> &str {
+        &self.data.system_symbol
+    }
 }
 
 #[cfg(test)]

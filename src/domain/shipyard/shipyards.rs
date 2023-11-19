@@ -1,9 +1,12 @@
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
-use crate::helper::{api::call_api, structs::Meta};
+use crate::{
+    domain::headquarters::System,
+    helper::{api::call_api, structs::Meta},
+};
 
-use super::{headquarters::System, player::Player, ships::Ships};
+use super::ships::Ships;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct Shipyards {
@@ -44,15 +47,28 @@ pub struct TransactionLog {
 impl Shipyards {
     pub async fn find_shipyards(
         &mut self,
-        player: &mut Player,
+        system: &str,
         token: &str,
     ) -> Result<(), reqwest::Error> {
-        let waypoint = todo!();
+        let api = format!("/systems/{system}/waypoints?traits=SHIPYARD");
+
+        call_api(self, Method::GET, &api, token).await?;
+
+        Ok(())
+    }
+}
+
+impl Shipyard {
+    pub async fn view_available_ships(
+        &mut self,
+        waypoint: &str,
+        token: &str,
+    ) -> Result<(), reqwest::Error> {
         let (system_loc, _) = waypoint
             .rsplit_once('-')
-            .expect("player arg should have been validated before being passed in.");
+            .expect("waypoint arg should have been validated before being passed in.");
 
-        let api = format!("/systems/{system_loc}/waypoints?traits=SHIPYARD");
+        let api = format!("/systems/{system_loc}/waypoints/{waypoint}/shipyard");
 
         call_api(self, Method::GET, &api, token).await?;
 
@@ -62,7 +78,7 @@ impl Shipyards {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::{player::Player, shipyards::Shipyards};
+    use crate::domain::shipyard::shipyards::{Shipyard, Shipyards};
     use dotenv::dotenv;
 
     fn get_token() -> String {
@@ -73,17 +89,33 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_shipyards() {
-        let mut player: Player = Player::default();
+        // let mut player: Player = Player::default();
 
-        player.player_info(&get_token()).await.unwrap();
+        // player.player_info(&get_token()).await.unwrap();
         let mut shipyards = Shipyards::default();
         shipyards
-            .find_shipyards(&mut player, &get_token())
+            .find_shipyards("X1-H7", &get_token())
             .await
             .unwrap();
 
         dbg!(&shipyards);
 
         assert_ne!(shipyards, Shipyards::default());
+    }
+
+    #[tokio::test]
+    async fn test_view_available_ships() {
+        // let mut player: Player = Player::default();
+
+        // player.player_info(&get_token()).await.unwrap();
+        let mut shipyard = Shipyard::default();
+        shipyard
+            .view_available_ships("X1-H7-H57", &get_token())
+            .await
+            .unwrap();
+
+        dbg!(&shipyard);
+
+        assert_ne!(shipyard, Shipyard::default());
     }
 }

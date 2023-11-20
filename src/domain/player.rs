@@ -43,8 +43,6 @@ impl<'a> NewPlayer<'a> {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct Player {
     data: Data,
-    #[serde(default)]
-    current_waypoint: CurrentWaypoint,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
@@ -58,13 +56,6 @@ pub struct Data {
     ship_count: u16,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-pub struct CurrentWaypoint {
-    sector: String,
-    system: String,
-    location: String,
-}
-
 impl Player {
     pub async fn player_info(&mut self, token: &str) -> Result<(), reqwest::Error> {
         call_api(self, Method::GET, "/my/agent", token).await?;
@@ -74,18 +65,6 @@ impl Player {
 
     pub fn get_hq_waypoint(&self) -> &str {
         &self.data.headquarters
-    }
-
-    pub fn get_current_waypoint(&mut self) -> &str {
-        self.current_waypoint.sector.push('-');
-        self.current_waypoint
-            .sector
-            .push_str(&self.current_waypoint.system);
-        self.current_waypoint.sector.push('-');
-        self.current_waypoint
-            .sector
-            .push_str(&self.current_waypoint.location);
-        &self.current_waypoint.sector
     }
 }
 

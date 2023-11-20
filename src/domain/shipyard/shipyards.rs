@@ -20,7 +20,7 @@ pub struct Shipyard {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 pub struct ShipyardDetails {
     symbol: String,
     ship_types: Vec<ShipType>,
@@ -64,11 +64,11 @@ impl Shipyard {
         waypoint: &str,
         token: &str,
     ) -> Result<(), reqwest::Error> {
-        let (system_loc, _) = waypoint
+        let (system, _) = waypoint
             .rsplit_once('-')
             .expect("waypoint arg should have been validated before being passed in.");
 
-        let api = format!("/systems/{system_loc}/waypoints/{waypoint}/shipyard");
+        let api = format!("/systems/{system}/waypoints/{waypoint}/shipyard");
 
         call_api(self, Method::GET, &api, token).await?;
 
@@ -110,7 +110,7 @@ mod tests {
         // player.player_info(&get_token()).await.unwrap();
         let mut shipyard = Shipyard::default();
         shipyard
-            .view_available_ships("X1-H7-H57", &get_token())
+            .view_available_ships("X1-NY50-C45", &get_token())
             .await
             .unwrap();
 

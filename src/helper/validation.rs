@@ -10,12 +10,13 @@ impl PlayerName {
         let range = 3..=14;
         let is_valid_length = range.contains(&name.chars().count());
 
-        let is_alpha_num = name.chars().all(char::is_alphanumeric);
+        let is_alphanumeric = name.chars().all(char::is_alphanumeric);
 
         let forbidden_chars = ['/', '(', ')', '"', '<', '>', '\\', '{', '}', '[', ']', ' '];
         let contains_forbidden_chars = name.chars().any(|s_char| forbidden_chars.contains(&s_char));
 
-        if is_empty_or_whitespace || is_valid_length || contains_forbidden_chars || is_alpha_num {
+        if is_empty_or_whitespace || is_valid_length || contains_forbidden_chars || is_alphanumeric
+        {
             Err(format!("{name}, is not a valid name. Name must be between 3 to 14 characters long\n
                         and only contain alpha-numeric characters, as well as dashes and underscores."))
         } else {
@@ -37,7 +38,7 @@ impl Waypoint {
     pub fn parse(waypoint: &str) -> Result<Self, String> {
         let is_empty_or_whitespace = waypoint.trim().is_empty();
 
-        let is_alpha_num = waypoint.chars().all(char::is_alphanumeric);
+        let is_alphanumeric = waypoint.chars().all(char::is_alphanumeric);
 
         let mut dash_count = HashMap::new();
 
@@ -54,7 +55,7 @@ impl Waypoint {
 
         if is_empty_or_whitespace
             || contains_forbidden_chars
-            || is_alpha_num
+            || is_alphanumeric
             || dash_count.remove(&'-') != Some(2)
         {
             Err(format!(

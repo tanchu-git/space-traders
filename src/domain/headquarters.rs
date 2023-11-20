@@ -57,11 +57,11 @@ impl Headquarters {
         token: &str,
     ) -> Result<(), reqwest::Error> {
         let waypoint = player.get_hq_waypoint();
-        let (system_loc, _) = waypoint
+        let (system, _) = waypoint
             .rsplit_once('-')
             .expect("player arg should have been validated before being passed in.");
 
-        let api = format!("/systems/{system_loc}/waypoints/{waypoint}");
+        let api = format!("/systems/{system}/waypoints/{waypoint}");
 
         call_api(self, Method::GET, &api, token).await?;
 

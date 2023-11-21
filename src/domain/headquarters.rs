@@ -1,7 +1,7 @@
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
-use crate::domain::player::Player;
+use crate::domain::player::PlayerVariantStruct;
 use crate::helper::api::call_api;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
@@ -53,7 +53,7 @@ struct Faction {
 impl Headquarters {
     pub async fn get_player_headquarters(
         &mut self,
-        player: &Player,
+        player: &PlayerVariantStruct,
         token: &str,
     ) -> Result<(), reqwest::Error> {
         let waypoint = player.get_hq_waypoint();
@@ -77,7 +77,7 @@ impl Headquarters {
 mod tests {
     use dotenv::dotenv;
 
-    use crate::domain::{headquarters::Headquarters, player::Player};
+    use crate::domain::{headquarters::Headquarters, player::PlayerVariantStruct};
 
     fn get_token() -> String {
         dotenv().ok();
@@ -87,7 +87,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_headquarters() {
-        let mut player: Player = Player::default();
+        let mut player = PlayerVariantStruct::default();
 
         player.player_info(&get_token()).await.unwrap();
         let mut hq = Headquarters::default();

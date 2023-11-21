@@ -1,14 +1,14 @@
 pub mod domain;
 pub mod helper;
 
-use domain::{contracts::Contracts, player::Player};
+use domain::{contracts::Contracts, player::PlayerVariantStruct};
 use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
     dotenv().ok();
 
-    let mut player: Player = Player::default();
+    let mut player = PlayerVariantStruct::default();
 
     let token = std::env::var("ACCESS_TOKEN").expect("Access token should be set.");
 

@@ -1,7 +1,10 @@
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
-use crate::helper::{api::call_api, structs::Meta};
+use crate::helper::{
+    api::call_api,
+    structs::{APIError, Meta},
+};
 
 use super::player;
 
@@ -48,30 +51,22 @@ struct ContractFulfilment {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "lowercase")]
 pub enum AcceptContractVariant {
     Data(Box<ContractDetails>),
-    Error(ContractAlreadyACcepted),
+    Error(APIError),
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 #[serde(rename_all = "lowercase", default)]
 pub struct AcceptContractVariantStruct {
     data: ContractDetails,
-    error: ContractAlreadyACcepted,
+    error: APIError,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct ContractDetails {
     contract: Contract,
     agent: player::Data,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-pub struct ContractAlreadyACcepted {
-    message: String,
-    code: u32,
-    data: ContractData,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
@@ -87,19 +82,6 @@ impl Contracts {
         Ok(())
     }
 
-    pub async fn accept_contract(
-        &mut self,
-        contract_id: usize,
-        token: &str,
-    ) -> Result<AcceptContractVariant, reqwest::Error> {
-        let api = format!("/my/contracts/{}/accept", self.data[contract_id].id);
-        let mut accepted_contract =
-            AcceptContractVariant::Error(ContractAlreadyACcepted::default());
-        call_api(&mut accepted_contract, Method::POST, &api, token).await?;
-
-        Ok(accepted_contract)
-    }
-
     pub async fn accept_contract_struct(
         &mut self,
         contract_id: usize,
@@ -109,14 +91,13 @@ impl Contracts {
         let mut accepted_contract_variant = AcceptContractVariantStruct::default();
         call_api(&mut accepted_contract_variant, Method::POST, &api, token).await?;
 
-        if accepted_contract_variant.error.message.is_empty() {
-            Ok(AcceptContractVariant::Data(Box::new(
+        match accepted_contract_variant.error.is_empty() {
+            true => Ok(AcceptContractVariant::Data(Box::new(
                 accepted_contract_variant.data,
-            )))
-        } else {
-            Ok(AcceptContractVariant::Error(
+            ))),
+            false => Ok(AcceptContractVariant::Error(
                 accepted_contract_variant.error,
-            ))
+            )),
         }
     }
 }
@@ -152,11 +133,5 @@ mod tests {
             .unwrap();
 
         dbg!(accepted_contract);
-    }
-
-    #[tokio::test]
-    #[ignore]
-    async fn test_accept_contract_struct() {
-        todo!()
     }
 }

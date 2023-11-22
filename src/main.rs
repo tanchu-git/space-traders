@@ -1,7 +1,7 @@
 pub mod domain;
 pub mod helper;
 
-use domain::{contracts::Contracts, player::PlayerVariantStruct};
+use domain::{contracts::ContractsVariantStruct, player::PlayerVariantStruct};
 use dotenv::dotenv;
 
 #[tokio::main]
@@ -14,7 +14,7 @@ async fn main() -> Result<(), reqwest::Error> {
 
     player.player_info(&token).await?;
 
-    let mut contracts: Contracts = Contracts::default();
+    let mut contracts: ContractsVariantStruct = ContractsVariantStruct::default();
     contracts.get_contracts(&token).await?;
     // let accepted = contracts.accept_contract(0, &token).await?;
 

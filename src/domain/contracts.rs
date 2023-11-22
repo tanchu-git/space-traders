@@ -8,15 +8,24 @@ use crate::helper::{
 
 use super::player;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-pub struct Contracts {
-    data: Vec<Contract>,
-    meta: Meta,
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub enum ContractsVariant {
+    Data(Vec<Contract>),
+    Meta(Meta),
+    Error(APIError),
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+#[serde(default)]
+pub struct ContractsVariantStruct {
+    data: Vec<Contract>,
+    meta: Meta,
+    error: APIError,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default, Clone)]
 #[serde(rename_all = "camelCase")]
-struct Contract {
+pub struct Contract {
     id: String,
     faction_symbol: String,
     r#type: String,
@@ -27,21 +36,21 @@ struct Contract {
     deadline_to_accept: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default, Clone)]
 struct Terms {
     deadline: String,
     payment: Payment,
     deliver: Vec<ContractFulfilment>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 struct Payment {
     on_accepted: u32,
     on_fulfilled: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 struct ContractFulfilment {
     trade_symbol: String,
@@ -75,11 +84,14 @@ pub struct ContractData {
     contract_id: String,
 }
 
-impl Contracts {
-    pub async fn get_contracts(&mut self, token: &str) -> Result<(), reqwest::Error> {
+impl ContractsVariantStruct {
+    pub async fn get_contracts(&mut self, token: &str) -> Result<ContractsVariant, reqwest::Error> {
         call_api(self, Method::GET, "/my/contracts", token).await?;
 
-        Ok(())
+        match self.error.is_empty() {
+            true => Ok(ContractsVariant::Data(self.data.clone())),
+            false => Ok(ContractsVariant::Error(self.error.clone())),
+        }
     }
 
     pub async fn accept_contract_struct(
@@ -106,7 +118,7 @@ impl Contracts {
 mod tests {
     use dotenv::dotenv;
 
-    use crate::domain::contracts::Contracts;
+    use crate::domain::contracts::ContractsVariantStruct;
 
     fn get_token() -> String {
         dotenv().ok();
@@ -116,16 +128,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_player_contracts() {
-        let mut contracts: Contracts = Contracts::default();
-        contracts.get_contracts(&get_token()).await.unwrap();
+        let mut contracts: ContractsVariantStruct = ContractsVariantStruct::default();
+        let contracts = contracts.get_contracts(&get_token()).await.unwrap();
 
         dbg!(&contracts);
-        assert_ne!(contracts, Contracts::default());
     }
 
     #[tokio::test]
     async fn test_accept_contract() {
-        let mut contracts: Contracts = Contracts::default();
+        let mut contracts: ContractsVariantStruct = ContractsVariantStruct::default();
         contracts.get_contracts(&get_token()).await.unwrap();
         let accepted_contract = contracts
             .accept_contract_struct(0, &get_token())

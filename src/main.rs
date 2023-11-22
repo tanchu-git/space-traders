@@ -12,17 +12,16 @@ async fn main() -> Result<(), reqwest::Error> {
 
     let token = std::env::var("ACCESS_TOKEN").expect("Access token should be set.");
 
-    player.player_info(&token).await?;
+    let player = player.player_info(&token).await?;
 
     let mut contracts: ContractsVariantStruct = ContractsVariantStruct::default();
-    contracts.get_contracts(&token).await?;
-    // let accepted = contracts.accept_contract(0, &token).await?;
+    let contract = contracts.get_contracts(&token).await?;
+    let accepted = contracts.accept_contract_struct(0, &token).await?;
 
-    dbg!(player);
+    println!("{player:#?}");
     println!();
-    dbg!(contracts);
+    println!("{contract:#?}");
     println!();
-    // dbg!(accepted);
-
+    println!("{accepted:#?}");
     Ok(())
 }

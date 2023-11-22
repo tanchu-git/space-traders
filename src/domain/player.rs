@@ -27,7 +27,6 @@ pub struct Token {
     token: String,
 }
 
-#[allow(dead_code)]
 impl<'a> NewPlayer<'a> {
     pub async fn new_player(
         call_sign: &'a str,

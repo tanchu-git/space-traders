@@ -59,7 +59,7 @@ impl Headquarters {
         let waypoint = player.get_hq_waypoint();
         let (system, _) = waypoint
             .rsplit_once('-')
-            .expect("player arg should have been validated before being passed in.");
+            .expect("waypoint arg should have been validated before being passed in.");
 
         let api = format!("/systems/{system}/waypoints/{waypoint}");
 
